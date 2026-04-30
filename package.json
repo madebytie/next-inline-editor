@@ -2,7 +2,13 @@
   "name": "next-inline-editor",
   "version": "0.1.0",
   "description": "Zero-config inline content editor for Next.js sites backed by GitHub. Edit text and images directly on your live pages.",
-  "keywords": ["nextjs", "cms", "inline-editing", "github", "content"],
+  "keywords": [
+    "nextjs",
+    "cms",
+    "inline-editing",
+    "github",
+    "content"
+  ],
   "license": "MIT",
   "author": "TieLove333",
   "repository": {
@@ -28,9 +34,11 @@
     "./api/logout": "./dist/api/logout.js"
   },
   "bin": {
-    "next-inline-editor": "./dist/bin/init.js"
+    "next-inline-editor": "dist/bin/init.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup"
   },
