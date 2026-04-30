@@ -1,0 +1,220 @@
+# next-inline-editor
+
+Zero-config inline content editor for Next.js sites. Edit text and images directly on your live pages. Changes commit to GitHub and deploy automatically.
+
+No database. No hosted CMS. No separate editing UI. Your live site is the editor.
+
+---
+
+## Quick start
+
+```bash
+npm install next-inline-editor
+npx next-inline-editor init
+```
+
+The `init` command will:
+- Detect your project structure (App Router, TypeScript or JS)
+- Create all API routes under `app/api/admin/`
+- Create `app/admin/page.tsx` and `app/admin/login/page.tsx`
+- Add the required environment variables to `.env.local`
+
+Then fill in two values in `.env.local` and you're done:
+
+```bash
+ADMIN_PASSWORD=your-secure-password-here
+GITHUB_TOKEN=ghp_your-token-here   # https://github.com/settings/tokens (Contents: read & write)
+GITHUB_REPO=owner/repo-name
+```
+
+Visit `/admin/login`, enter your password, and start editing.
+
+---
+
+## How it works
+
+1. Add `data-edit="field.path"` to any text element in your components
+2. Add `data-edit-image="field.path"` to any image element
+3. At `/admin`, those elements become editable in place — text is clickable, images get a "Change image" button
+4. Saving commits the updated JSON directly to your GitHub repo and triggers your normal deploy pipeline
+
+---
+
+## Adding data-edit attributes
+
+After running `init`, wire up your components so the editor knows what to edit:
+
+```tsx
+// components/MyHomePage.tsx
+export default function MyHomePage({ content }) {
+  return (
+    <div>
+      <h1 data-edit="hero.title">{content.hero.title}</h1>
+      <p data-edit="hero.subtitle">{content.hero.subtitle}</p>
+
+      <div
+        data-edit-image="hero.backgroundImage"
+        style={{ backgroundImage: `url(${content.hero.backgroundImage})` }}
+      />
+
+      <img
+        data-edit-image="logo.src"
+        src={content.logo.src}
+        alt="Logo"
+      />
+    </div>
+  );
+}
+```
+
+Then update the generated `app/admin/page.tsx` to use your component:
+
+```tsx
+import { AdminEditor } from 'next-inline-editor';
+import homeContent from '../../content/home.json';
+import MyHomePage from '../../components/MyHomePage';
+
+export default function AdminPage() {
+  return (
+    <AdminEditor
+      initialContent={homeContent}
+      contentFile="content/home.json"
+      pageLabel="Home"
+    >
+      {(content) => <MyHomePage content={content} />}
+    </AdminEditor>
+  );
+}
+```
+
+---
+
+## Multiple pages
+
+Pass a `pages` array to show a page-switcher dropdown in the editor toolbar:
+
+```tsx
+// app/admin/page.tsx
+import { AdminEditor } from 'next-inline-editor';
+
+export default async function AdminPage({ searchParams }) {
+  const page = (await searchParams).page ?? 'home';
+  const { content, contentFile, pageLabel } = getPageConfig(page);
+
+  return (
+    <AdminEditor
+      initialContent={content}
+      contentFile={contentFile}
+      pageLabel={pageLabel}
+      pages={[
+        { label: 'Home', href: '/admin' },
+        { label: 'About', href: '/admin?page=about' },
+        { label: 'Contact', href: '/admin?page=contact' },
+      ]}
+    >
+      {(content) => <PageComponent content={content} />}
+    </AdminEditor>
+  );
+}
+```
+
+---
+
+## Content file structure
+
+Your JSON files can be any shape. The editor doesn't care about schema — it just reads and writes whatever you give it.
+
+**`content/home.json`**
+```json
+{
+  "hero": {
+    "title": "Welcome",
+    "subtitle": "We build great things.",
+    "backgroundImage": "/images/hero.jpg"
+  },
+  "about": {
+    "heading": "About us",
+    "body": "We are a small team..."
+  }
+}
+```
+
+Arrays work too — use numeric indexes in paths:
+
+```tsx
+<div data-edit-image="slides.0.image" />
+<p data-edit="slides.0.caption">{content.slides[0].caption}</p>
+```
+
+---
+
+## Image uploads
+
+When an editor clicks "Change image", the file is:
+1. Validated (JPEG, PNG, WebP, or GIF; max 10MB)
+2. Committed to `public/uploads/` in your GitHub repo
+3. The path is saved into your content JSON as `/uploads/filename.jpg`
+
+The image is immediately previewed before the deploy completes.
+
+To change the upload directory, replace the generated upload route:
+
+```ts
+// app/api/admin/upload/route.ts
+import { handleUpload } from 'next-inline-editor/api/upload';
+
+export async function POST(request: Request) {
+  return handleUpload(request, {
+    uploadDir: 'public/media',
+    publicPrefix: '/media',
+  });
+}
+```
+
+---
+
+## Deploy pipeline
+
+This package commits directly to your GitHub repo. For automatic deploys on commit, connect your repo to:
+
+- **Vercel** — auto-deploys on every push, no config needed
+- **Netlify** — enable "continuous deployment" in site settings
+- **Cloudflare Pages** — connect repo and set build command
+
+After saving in the editor, the live site updates in ~1 minute.
+
+---
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `ADMIN_PASSWORD` | Yes | Password for the login page |
+| `ADMIN_SESSION_SECRET` | Yes | Secret for signing session tokens — auto-generated by `init` |
+| `GITHUB_TOKEN` | Yes | GitHub personal access token with Contents read & write scope |
+| `GITHUB_REPO` | Yes | `owner/repo` format |
+| `GITHUB_BRANCH` | No | Branch to commit to (default: `main`) |
+
+---
+
+## Security notes
+
+- Session cookie is `httpOnly`, `secure` (in production), and `sameSite: lax`
+- Password and token comparisons use timing-safe equality to prevent timing attacks
+- The save route validates file paths against your explicit `ALLOWED_FILES` whitelist — arbitrary file writes are not possible
+- The `/admin` page has no server-side auth guard — the API routes are always protected, but add Next.js middleware if you want to block unauthenticated page access entirely
+
+---
+
+## TypeScript
+
+The `AdminEditor` `children` prop passes a loosely typed `content` object. Cast it to your own type for full safety:
+
+```tsx
+import type { HomeContent } from '../types/content';
+
+<AdminEditor initialContent={homeContent} ...>
+  {(content) => <MyHomePage content={content as unknown as HomeContent} />}
+</AdminEditor>
+```
+
