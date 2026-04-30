@@ -345,7 +345,7 @@ async function main() {
   log('');
   log(`  4. ${bold}Visit /admin/login${reset} and start editing`);
   log('');
-  log(`  See the full guide: ${dim}https://github.com/yourusername/next-inline-editor#readme${reset}`);
+  log(`  See the full guide: ${dim}https://github.com/madebytie/next-inline-editor#readme${reset}`);
   log('');
 }
 

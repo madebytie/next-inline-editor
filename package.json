@@ -10,14 +10,14 @@
     "content"
   ],
   "license": "MIT",
-  "author": "TieLove333",
+  "author": "madebytie",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TieLove333/next-inline-editor.git"
+    "url": "git+https://github.com/madebytie/next-inline-editor.git"
   },
-  "homepage": "https://github.com/TieLove333/next-inline-editor#readme",
+  "homepage": "https://github.com/madebytie/next-inline-editor#readme",
   "bugs": {
-    "url": "https://github.com/TieLove333/next-inline-editor/issues"
+    "url": "https://github.com/madebytie/next-inline-editor/issues"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
