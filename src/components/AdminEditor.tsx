@@ -380,6 +380,27 @@ export default function AdminEditor({
           >
             {saving ? 'Saving…' : dirty ? 'Save & Publish' : 'No changes'}
           </button>
+          <a
+            href="https://github.com/madebytie/next-inline-editor#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '10px 14px',
+              background: 'transparent',
+              color: '#aaa',
+              border: '1px solid #333',
+              borderRadius: 4,
+              fontSize: 13,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              lineHeight: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+            title="Documentation"
+          >
+            ?
+          </a>
           <button
             onClick={onLogout}
             style={{

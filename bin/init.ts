@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
@@ -92,30 +91,21 @@ function apiUploadRoute(ext: string) {
     : `module.exports = require('next-inline-editor/api/upload');\n`;
 }
 
-function apiSaveRoute(ext: string, contentFiles: string[]) {
-  const filesArray = contentFiles.map((f) => `  '${f}',`).join('\n');
+function apiSaveRoute(ext: string) {
   if (ext === 'ts') {
     return `import { handleSave } from 'next-inline-editor/api/save';
 import { type NextRequest } from 'next/server';
 
-const ALLOWED_FILES = new Set([
-${filesArray}
-]);
-
 export async function POST(request: NextRequest) {
-  return handleSave(request, ALLOWED_FILES);
+  return handleSave(request);
 }
 `;
   }
   return `const { handleSave } = require('next-inline-editor/api/save');
 
-const ALLOWED_FILES = new Set([
-${filesArray}
-]);
-
 module.exports = {
   async POST(request) {
-    return handleSave(request, ALLOWED_FILES);
+    return handleSave(request);
   },
 };
 `;
@@ -123,14 +113,16 @@ module.exports = {
 
 function adminLoginPage(ext: string) {
   if (ext === 'ts') {
-    return `import { AdminLogin } from 'next-inline-editor';
+    return `"use client";
+import { AdminLogin } from 'next-inline-editor';
 
 export default function LoginPage() {
   return <AdminLogin />;
 }
 `;
   }
-  return `const { AdminLogin } = require('next-inline-editor');
+  return `"use client";
+const { AdminLogin } = require('next-inline-editor');
 
 export default function LoginPage() {
   return <AdminLogin />;
@@ -156,7 +148,8 @@ function adminPage(ext: string, appDir: string, contentFiles: string[]) {
         </div>`;
 
   if (ext === 'ts') {
-    return `import { AdminEditor } from 'next-inline-editor';
+    return `"use client";
+import { AdminEditor } from 'next-inline-editor';
 import content from '${importPath}';
 
 export default function AdminPage() {
@@ -174,7 +167,8 @@ ${placeholder}
 }
 `;
   }
-  return `const { AdminEditor } = require('next-inline-editor');
+  return `"use client";
+const { AdminEditor } = require('next-inline-editor');
 const content = require('${importPath}');
 
 export default function AdminPage() {
@@ -303,7 +297,7 @@ async function main() {
   createFile(path.join(cwd, appDir, 'api/admin/login/route.' + ext), apiLoginRoute(ext));
   createFile(path.join(cwd, appDir, 'api/admin/logout/route.' + ext), apiLogoutRoute(ext));
   createFile(path.join(cwd, appDir, 'api/admin/upload/route.' + ext), apiUploadRoute(ext));
-  createFile(path.join(cwd, appDir, 'api/admin/save/route.' + ext), apiSaveRoute(ext, contentFiles));
+  createFile(path.join(cwd, appDir, 'api/admin/save/route.' + ext), apiSaveRoute(ext));
   log('');
 
   // Admin pages
@@ -330,20 +324,24 @@ async function main() {
   log('');
   log(`${bold}Next steps:${reset}`);
   log('');
-  log(`  1. ${bold}Fill in .env.local${reset}`);
+  log(`  1. ${bold}Restart your dev server${reset}`);
+  log(`     New routes were added — Next.js must restart to pick them up`);
+  log(`     ${dim}npm run dev${reset}  (or yarn dev / bun dev)`);
+  log('');
+  log(`  2. ${bold}Fill in .env.local${reset}`);
   log(`     • Set ADMIN_PASSWORD to a secure password`);
   log(`     • Get a GitHub token at https://github.com/settings/tokens`);
   log(`       (needs Contents: Read and write scope)`);
   log(`     • Set GITHUB_REPO to your "owner/repo-name"`);
   log('');
-  log(`  2. ${bold}Add data-edit attributes to your components${reset}`);
+  log(`  3. ${bold}Add data-edit attributes to your components${reset}`);
   log(`     On any text element:   ${cyan}data-edit="hero.title"${reset}`);
   log(`     On any image element:  ${cyan}data-edit-image="hero.backgroundImage"${reset}`);
   log('');
-  log(`  3. ${bold}Update ${appDir}/admin/page.${xExt}${reset}`);
+  log(`  4. ${bold}Update ${appDir}/admin/page.${xExt}${reset}`);
   log(`     Replace the JSON preview with your actual page component`);
   log('');
-  log(`  4. ${bold}Visit /admin/login${reset} and start editing`);
+  log(`  5. ${bold}Visit /admin/login${reset} and start editing`);
   log('');
   log(`  See the full guide: ${dim}https://github.com/madebytie/next-inline-editor#readme${reset}`);
   log('');

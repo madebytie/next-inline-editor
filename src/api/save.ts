@@ -3,16 +3,15 @@ import { cookies } from 'next/headers';
 import { adminCookieName, verifySession } from '../lib/admin-auth';
 import { commitFile } from '../lib/github';
 
-/**
- * Call this inside your own POST route handler.
- *
- * allowedFiles: set of repo-relative paths that can be written,
- * e.g. new Set(['content/home.json', 'content/properties/beach-house.json'])
- *
- * You can also read these from an env var:
- * const allowedFiles = new Set(process.env.ALLOWED_CONTENT_FILES!.split(','))
- */
-export async function handleSave(request: Request, allowedFiles: Set<string>) {
+function isAllowedPath(file: string): boolean {
+  // Must start with content/ or src/content/, end in .json, no traversal
+  return (
+    /^(src\/)?content\/.+\.json$/.test(file) &&
+    !file.includes('..')
+  );
+}
+
+export async function handleSave(request: Request, allowedFiles?: Set<string>) {
   const session = (await cookies()).get(adminCookieName())?.value;
   if (!verifySession(session)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -25,7 +24,11 @@ export async function handleSave(request: Request, allowedFiles: Set<string>) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  if (!body.file || !allowedFiles.has(body.file)) {
+  const allowed = allowedFiles
+    ? allowedFiles.has(body.file ?? '')
+    : isAllowedPath(body.file ?? '');
+
+  if (!body.file || !allowed) {
     return NextResponse.json({ error: 'File not allowed' }, { status: 400 });
   }
   if (typeof body.content !== 'object' || body.content === null) {
