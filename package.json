@@ -1,6 +1,6 @@
 {
   "name": "next-inline-editor",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Zero-config inline content editor for Next.js sites backed by GitHub. Edit text and images directly on your live pages.",
   "keywords": [
     "nextjs",
