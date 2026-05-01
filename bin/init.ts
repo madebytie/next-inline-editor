@@ -86,9 +86,23 @@ function apiLogoutRoute(ext: string) {
 }
 
 function apiUploadRoute(ext: string) {
-  return ext === 'ts'
-    ? `export { POST } from 'next-inline-editor/api/upload';\n`
-    : `module.exports = require('next-inline-editor/api/upload');\n`;
+  if (ext === 'ts') {
+    return `import { handleUpload } from 'next-inline-editor/api/upload';
+import { type NextRequest } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  return handleUpload(request);
+}
+`;
+  }
+  return `const { handleUpload } = require('next-inline-editor/api/upload');
+
+module.exports = {
+  async POST(request) {
+    return handleUpload(request);
+  },
+};
+`;
 }
 
 function apiSaveRoute(ext: string) {
